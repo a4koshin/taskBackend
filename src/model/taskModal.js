@@ -9,7 +9,7 @@ const taskSchema = mongoose.Schema(
       minlength: 3,
       maxlength: 30,
     },
-    describtion: {
+    description: {
       type: String,
       required: true,
       trim: true,
@@ -29,7 +29,7 @@ const taskSchema = mongoose.Schema(
       default: "medium",
     },
   },
-  { timeStamps: true }
+  { timestamps: true }
 );
 
 const taskModal = mongoose.model("Task", taskSchema);
