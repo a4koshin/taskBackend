@@ -1,14 +1,21 @@
 import taskModal from "../model/taskModal.js";
 
 export const createTask = async (req, res) => {
+  const userId = req.user.id;
   try {
     const { title, description, status, priority } = req.body;
     if (!title || !description || !status || !priority)
       return res
-        .status(404)
+        .status(400)
         .json({ success: false, message: "All fields are required" });
 
-    const newTask = new taskModal({ title, description, status, priority });
+    const newTask = new taskModal({
+      user: userId,
+      title,
+      description,
+      status,
+      priority,
+    });
 
     await newTask.save();
     res
@@ -21,8 +28,11 @@ export const createTask = async (req, res) => {
 };
 
 export const getTasks = async (req, res) => {
+  const userId = req.user.id;
   try {
-    const tasks = await taskModal.find().sort({ createdAt: -1 });
+    const tasks = await taskModal
+      .find({ user: userId })
+      .sort({ createdAt: -1 });
     res.status(200).json(tasks);
   } catch (error) {
     console.error(error);
@@ -31,9 +41,13 @@ export const getTasks = async (req, res) => {
 };
 
 export const getTaskById = async (req, res) => {
+  const userId = req.user.id;
   try {
-    const task = await taskModal.findById(req.params.id);
-    if (!task) return res.status(404).json({ message: "task not found!" });
+    const task = await taskModal.findOne({ _id: req.params.id, user: userId });
+    if (!task)
+      return res
+        .status(404)
+        .json({ message: "task not found! or Not authorized" });
     res.status(200).json(task);
   } catch (error) {
     console.error(error);
@@ -42,16 +56,13 @@ export const getTaskById = async (req, res) => {
 };
 
 export const updateTask = async (req, res) => {
+  const userId = req.user.id;
   try {
     const { title, description, status, priority } = req.body;
-    const updatedTask = await taskModal.findByIdAndUpdate(
-      req.params.id,
-      {
-        title,
-        description,
-        status,
-        priority,
-      },
+
+    const updatedTask = await taskModal.findOneAndUpdate(
+      { _id: req.params.id, user: userId },
+      { title, description, status, priority },
       { new: true }
     );
     if (!updatedTask)
@@ -67,11 +78,17 @@ export const updateTask = async (req, res) => {
 };
 
 export const deleteTask = async (req, res) => {
+  const userId = req.user.id;
   try {
-    const deletedTask = await taskModal.findByIdAndDelete(req.params.id);
+    const deletedTask = await taskModal.findOneAndDelete({
+      _id: req.params.id,
+      user: userId,
+    });
 
     if (!deletedTask) {
-      return res.status(404).json({ message: "Task not found" });
+      return res
+        .status(404)
+        .json({ message: "Task not found or nor authorized" });
     }
 
     res

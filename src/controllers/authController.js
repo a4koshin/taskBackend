@@ -39,7 +39,9 @@ export const register = async (req, res) => {
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    return res.json({ success: true });
+    return res
+      .status(201)
+      .json({ success: true, message: "User created Successfully" });
   } catch (error) {
     console.log("Error Occured in the Registration controller", error);
     return res.json({ success: false, message: "Internal Server Error" });
@@ -52,18 +54,26 @@ export const login = async (req, res) => {
     return res.json({ success: false, message: "All fields are required" });
 
   if (typeof password != "string")
-    return res.json({ success: false, message: "Password must be String" });
-  if (password < 6)
-    return res.json({ success: false, message: "Password must be 6-digits" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Password must be String" });
+  if (password.length < 6)
+    return res
+      .status(400)
+      .json({ success: false, message: "Password must be 6-digits" });
 
   try {
     const user = await userModel.findOne({ email });
     if (!user) {
-      return res.json({ success: false, message: "User Not Found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User Not Found" });
     }
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid)
-      return res.json({ success: false, message: "Invalid Credentials" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid Credentials" });
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",

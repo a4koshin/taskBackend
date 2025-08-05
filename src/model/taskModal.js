@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
-
-const taskSchema = mongoose.Schema(
+const taskSchema = new mongoose.Schema(
   {
     title: {
       type: String,
@@ -27,6 +26,11 @@ const taskSchema = mongoose.Schema(
       required: true,
       enum: ["low", "medium", "high"],
       default: "medium",
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "user",
+      required: true,
     },
   },
   { timestamps: true }
